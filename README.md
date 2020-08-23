@@ -24,4 +24,10 @@ If exists, the repsonse code is 200 and body is the short url path.
 
 - Lookup short URL:
 `GET /<short-url>` shall if exists redirect to the stored real URL. Otherwise a 404 NotFound is returned.
+
+### Todo improvements
+- Url validation
+- Shutdown handler
+- Configuration for redis hosts, etc
+- Domain handling for short url path
   
