@@ -14,7 +14,7 @@ import redis.embedded.RedisServer
 
 import scala.util.Try
 
-object Main extends App {
+object Server extends App {
 
   val redis = new RedisServer.Builder()
     .port(6379)
