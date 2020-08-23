@@ -32,9 +32,6 @@ object Main extends App {
   }
 
   def create: Endpoint[IO, String] = post("create" :: jsonBody[Payload]) { p: Payload =>
-    //todo validation
-    println(s"got ${p.url}")
-
     for {
       valid <- IO.fromTry(Try(URI.create(p.url)))
       result <- urlService.createOrGet(valid)
@@ -48,7 +45,7 @@ object Main extends App {
 
   def lookup: Endpoint[IO, Unit] = get(path[String]) { path: String =>
     urlService.get(ShortUrl(path)) map {
-      case Left(Result.NotFound) => Output.empty(Status.NotFound)
+      case Left(Missing) => Output.empty(Status.NotFound)
       case Right(url) => Output.unit(Status.SeeOther).withHeader("Location" -> url.toASCIIString)
     }
   }

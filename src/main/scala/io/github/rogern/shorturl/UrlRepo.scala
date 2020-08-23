@@ -2,8 +2,7 @@ package io.github.rogern.shorturl
 
 import java.net.URI
 
-import cats.effect._
-import cats.effect.IO
+import cats.effect.{IO, _}
 import dev.profunktor.redis4cats.Redis
 import dev.profunktor.redis4cats.codecs.Codecs
 import dev.profunktor.redis4cats.codecs.splits.SplitEpi
@@ -13,6 +12,7 @@ import dev.profunktor.redis4cats.effect.Log.Stdout._
 import scala.util.Try
 
 class UrlRepo(redisUri: String) {
+
   implicit val cs: ContextShift[IO] = IO.contextShift(scala.concurrent.ExecutionContext.global)
 
   private val CounterKey = "CounterKey"

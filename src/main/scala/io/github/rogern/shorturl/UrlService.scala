@@ -5,19 +5,14 @@ import java.net.URI
 import cats.effect.IO
 import io.github.rogern.shorturl.UrlService.generateShortUrl
 
-import scala.util.control.NonFatal
-
 trait Result
 
 object Result {
-
   case class Existing(shortUrl: ShortUrl) extends Result
-
   case class Created(shortUrl: ShortUrl) extends Result
-
-  case object NotFound extends Result
-
 }
+
+case object Missing
 
 case class ShortUrl(path: String)
 
@@ -31,32 +26,28 @@ class UrlService(repo: UrlRepo) {
       repo
         .save(shortUrl, url)
         .map(_ => Created(shortUrl))
-        .handleErrorWith {
-          case NonFatal(_: Exception) =>
-            println("FOUND already")
-            repo.get(url) map {
-              case Some(shortUrl) => Existing(shortUrl)
-              case None => NotFound
-            }
-        }
     }
 
-    for {
-      counter <- repo.incrementAndGet()
-      shortUrl = generateShortUrl(counter)
-      result <- save(shortUrl)
-    } yield result
+    repo.get(url) flatMap {
+      case Some(existing) => IO.pure(Existing(existing))
+      case None =>
+        for {
+          counter <- repo.incrementAndGet()
+          shortUrl = generateShortUrl(counter)
+          result <- save(shortUrl)
+        } yield result
+    }
   }
 
-  def get(shortUrl: ShortUrl): IO[Either[NotFound.type, URI]] = {
-    repo.get(shortUrl).map(_.toRight(NotFound))
+  def get(shortUrl: ShortUrl): IO[Either[Missing.type, URI]] = {
+    repo.get(shortUrl).map(_.toRight(Missing))
   }
 }
 
 object UrlService {
 
   val characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  val floor = 1_000_000L
+  val floor = 100_000_000L
 
   def generateShortUrl(num: Long, fl: Long = floor): ShortUrl = {
     def pickBase62(n: Long): Seq[Char] = {
