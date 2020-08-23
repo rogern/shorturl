@@ -6,7 +6,14 @@ Scala 2.13 and SBT 1.3 is required.
 For simplicity Redis is Embedded but can easily be replaced to a remote instance.
 
 ### Instructions
-To run: `sbt "runMain io.github.rogern.shorturl.Server"`
+#### Build
+`sbt compile`
+
+#### Test
+`sbt test`
+
+#### Run
+`sbt "runMain io.github.rogern.shorturl.Server"`
 Service starts on port `8081`
 
 ### Api
