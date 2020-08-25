@@ -5,6 +5,8 @@ import java.net.URI
 import cats.effect.IO
 import io.github.rogern.shorturl.UrlService.generateShortUrl
 
+import scala.util.control.NonFatal
+
 trait Result
 
 object Result {
@@ -26,17 +28,20 @@ class UrlService(repo: UrlRepo) {
       repo
         .save(shortUrl, url)
         .map(_ => Created(shortUrl))
+        .handleErrorWith {
+          case NonFatal(UrlRepo.KeyExistsException) =>
+            repo.get(url) flatMap {
+              case Some(value) => IO.pure(Existing(value))
+              case None => IO.raiseError(new IllegalStateException("Could not find url key even though DB returned it exists!"))
+            }
+        }
     }
 
-    repo.get(url) flatMap {
-      case Some(existing) => IO.pure(Existing(existing))
-      case None =>
-        for {
-          counter <- repo.incrementAndGet()
-          shortUrl = generateShortUrl(counter)
-          result <- save(shortUrl)
-        } yield result
-    }
+    for {
+      counter <- repo.incrementAndGet()
+      shortUrl = generateShortUrl(counter)
+      result <- save(shortUrl)
+    } yield result
   }
 
   def get(shortUrl: ShortUrl): IO[Either[Missing.type, URI]] = {

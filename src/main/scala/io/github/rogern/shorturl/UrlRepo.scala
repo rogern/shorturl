@@ -29,8 +29,8 @@ class UrlRepo(redisUri: String) {
   def save(shortUrl: ShortUrl, url: URI): IO[Unit] = {
     urlResource.use { cmd =>
       for {
-        _ <- cmd.set(url.toString, shortUrl.path) // reversed index
-        _ <- cmd.set(shortUrl.path, url.toString)
+        saved <- cmd.setNx(url.toString, shortUrl.path) // reversed index
+        _ <- if (saved) cmd.set(shortUrl.path, url.toString) else IO.raiseError(UrlRepo.KeyExistsException)
       } yield ()
     }
   }
@@ -58,4 +58,8 @@ class UrlRepo(redisUri: String) {
       } yield r
     }
   }
+}
+
+object UrlRepo {
+  case object KeyExistsException extends IllegalStateException("Key already exists!")
 }
