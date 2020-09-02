@@ -59,6 +59,6 @@ object Server extends App {
     .serve[Text.Plain](new Api(urlService).run)
     .toService
 
+  Runtime.getRuntime.addShutdownHook(new Thread(() => redis.stop()))
   Await.ready(Http.server.serve(":8081", service))
-  redis.stop()
 }
